@@ -5,25 +5,41 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-/*
+
 const Register = require('./controllers/Register');
-const LogIn = require('./controllers/LogIn');
+/*const LogIn = require('./controllers/LogIn');
 const NewPost = require('./controllers/NewPost');
 */
 
 dotenv.config();
 
+//process.env.DB_USER
+//process.env.DB_PASSWORD
+
+/*
+create table user_details (
+	id int identity(1,1) not null,
+	email varchar(255),
+	username varchar(255),
+	userpassword varchar(255)
+);
+
+create table user_profile (
+	id int not null,
+	picture varchar(255),
+	intro varchar(255),
+);
+*/
+
 const db = knex({
 	client: 'mssql',
 	connection: {
-		host: process.env.DB_HOST,
-		username: process.env.DB_USER,
-		password: process.env.DB_PASSWORD,
-		options: {
-			port: 8081,
-			database: 'msaphase2brog',
-			encrypt: true
-		}
+		server: process.env.DB_HOST,
+		user: "dche192",
+		password: "Msaphase2",
+		port: 1433,
+		database: 'brogdb',
+		encrypt: true
 	}
 });
 
@@ -36,7 +52,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/', (req, res) => { res.send('Server is up and running') });
 
 /* Handle new registration */
-//app.post('/register', (req, res) => { register.Register(req, res, db, bcrypt) });
+app.post('/register', (req, res) => { Register.Register(req, res, db, bcrypt) });
 
 /* Handle signin from users */
 //app.post('/login', (req, res) => { login.LogIn(req, res, db, bcrypt) });

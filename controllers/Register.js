@@ -1,4 +1,7 @@
-const Register = (req, res, db, bcrypt) => {
+
+const db = require('./DBHandler');
+
+async function Register(req, res, sql, bcrypt, config) {
 
 	const { username, email, password } = req.body;
 	if (!username || !email || !password) {
@@ -8,47 +11,22 @@ const Register = (req, res, db, bcrypt) => {
 		return res.status(400).json({ errorMessage: "Unfilled form" });
 	}
 
-	db.select('email').from('user_details')
-	.where('email', '=', email)
-	.then(data => {
-		if (data != "") {
-			// if (data[0].email) {
+	/*	Check if input email or username already exists in the database	*/
+	const foundEmail = await db.CheckDuplicate(sql, config, 'email', email);
+	const foundUsername = await db.CheckDuplicate(sql, config, 'username', username);
+	if (foundEmail) {
+		return res.status(400).json({ errorMessage: "Email already exists" });
+	} else if (foundUsername) {
+		return res.status(400).json({ errorMessage: "Username already exists" });
+	} 
 
-			// }
-			res.status(400).json({ errorMessage: "email already exists in the db" });
-		} else {
-			const hashedPw = bcrypt.hashSync(password);
-
-			db.transaction(trx => {
-				trx.insert({
-					email: email,
-					username: username,
-					userpassword: password
-				})
-				.into('user_details')
-				.returning('id')
-				.then(id => {
-					return trx('user_profile')
-					.returning('*')
-					.insert({
-						id: id[0],
-						picture: 'https://i.imgur.com/FSgbIi4.png',
-						intro: 'None'
-					})
-					.then(user => {
-						return res.status(200).json({ errorMessage: "yes" });
-					})
-				})
-				.then(trx.commit)
-				.catch(trx.rollback)
-			})
-			.catch(e => {
-				res.json({ errorMessage: e });
-			})
-		}
-	});
-
-
+	/*	Begin inserting information from the new user into the database */
+	const insertNewUser = await db.InsertNewUser(sql, config, req, bcrypt);
+	if (insertNewUser) {
+		res.status(200).json({ errorMessage: "GOOD JOB FOLKS" });
+	} else {
+		res.status(400).json({ errorMessage: "BAD NEWS" });
+	}
 
 }
 

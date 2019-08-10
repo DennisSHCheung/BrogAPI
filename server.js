@@ -14,11 +14,16 @@ const NewPost = require('./controllers/NewPost');
 dotenv.config();
 
 const db = knex({
-	client: 'mysql',
+	client: 'mssql',
 	connection: {
 		host: process.env.DB_HOST,
 		username: process.env.DB_USER,
-		password: process.env.DB_PASSWORD
+		password: process.env.DB_PASSWORD,
+		options: {
+			port: 8081,
+			database: 'msaphase2brog',
+			encrypt: true
+		}
 	}
 });
 

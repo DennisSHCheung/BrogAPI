@@ -2,6 +2,7 @@
 	type can be either email or username
 */
 const CheckDuplicate = (sql, config, type, data) => {
+
 	const result = sql.connect(config).then(pool => {
 		return (
 			pool.request()
@@ -17,6 +18,7 @@ const CheckDuplicate = (sql, config, type, data) => {
 		})
 		.catch(e => {
 			console.log("Failed to check email");
+			sql.close();
 			return false;
 		})
 	return result;

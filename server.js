@@ -68,6 +68,6 @@ app.post('/login', (req, res) => { LogIn.LogIn(req, res, sql, bcrypt, config) })
 /* Handle creations of new blog post */
 //app.post('./newPost', (req, res) => { newPost.NewPost(req, res, db) });
 
-app.listen(10000, () => {
+app.listen(process.env.PORT || 10000, () => {
 	console.log('Server is now listening');
 });

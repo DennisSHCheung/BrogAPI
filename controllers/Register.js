@@ -1,7 +1,7 @@
 
 const db = require('./DBHandler');
 
-const Register = (req, res, sql, bcrypt, config) => {
+const Register = (req, res, pool, bcrypt, config) => {
 
 	const { username, email, password } = req.body;
 	if (!username || !email || !password) {
@@ -20,24 +20,24 @@ const Register = (req, res, sql, bcrypt, config) => {
 	// 	return res.status(400).json({ errorMessage: "Username already exists" });
 	// } 
 
-	db.CheckDuplicate(sql, config, 'email', email)
+	db.CheckDuplicate(pool, config, 'email', email)
 	.then(duplicateEmail => {
 	    if (duplicateEmail) {
 	        return res.status(400).json({ errorMessage: "Email already exists" });
 	    }
 	    else {
-	        db.CheckDuplicate(sql, config, 'username', username)
+	        db.CheckDuplicate(pool, config, 'username', username)
 	        .then(duplicateUsername => {
 	            if (duplicateUsername) {
 	                return res.status(400).json({ errorMessage: "Username already exists" });
 	            }
 	            else {
-	                db.InsertNewUser(sql, config, req, bcrypt)
+	                db.InsertNewUser(pool, config, req, bcrypt)
 	                .then(success => {
-	                	if (success) {
-	                		res.status(200).json({ errorMessage: "GOOD JOB FOLKS" });
+	                	if (success !== -1) {
+	                		res.status(200).json({ response: success });
 	                	} else {
-	                		res.status(400).json({ errorMessage: "BAD NEWS" });
+	                		res.status(400).json({ response: "Something went wrong" });
 	                	}
 	                })
 	            }

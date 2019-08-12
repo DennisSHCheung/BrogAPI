@@ -50,6 +50,9 @@ const config = {
 }
 
 const sql = require('mssql');
+const pool = new sql.ConnectionPool(config, error => {
+	console.log(error, 'Database conneciton error');
+});
 
 const app = express();
 app.use(cors());
@@ -60,16 +63,16 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/', (req, res) => { res.send('Server is up and running') });
 
 /* Handle new registration */
-app.post('/register', (req, res) => { Register.Register(req, res, sql, bcrypt, config) });
+app.post('/register', (req, res) => { Register.Register(req, res, pool, bcrypt, config) });
 
 /* Handle signin from users */
-app.post('/login', (req, res) => { LogIn.LogIn(req, res, sql, bcrypt, config) });
+app.post('/login', (req, res) => { LogIn.LogIn(req, res, pool, bcrypt, config) });
 
 /* Handle creations of new blog post */
-app.post('./newPost', (req, res) => { Blog.NewPost(req, res, sql, bcrypt, config) });
+app.post('./newPost', (req, res) => { Blog.NewPost(req, res, pool, bcrypt, config) });
 
 /* Return all posts from user */
-app.get('./getPosts', (req, res) => { Blog.getPosts(req, res, sql, bcrypt, config) });
+app.get('./getPosts', (req, res) => { Blog.getPosts(req, res, pool, bcrypt, config) });
 
 app.listen(process.env.PORT || 10000, () => {
 	console.log('Server is now listening');

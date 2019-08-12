@@ -1,131 +1,118 @@
 /*	Check if input email or username exists in the database 
 	type can be either email or username
 */
-const CheckDuplicate = (sql, config, type, data) => {
+const CheckDuplicate = (pool, config, type, data) => {
 
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`select ${type} from user_details where ${type} = '${data}'`)
-			.then(result => {
-				sql.close();
-				if (result.rowsAffected[0] === 0) {
-					return false;
-				}
-				return true;
-			})
-		)
-		})
-		.catch(e => {
-			console.log("Failed to check");
-			sql.close();
-			return false;
-		})
-	return result;
-}
-
-const InsertNewUser = (sql, config, req, bcrypt) => {
-	const { email, username, password } = req.body;
-	const hash = bcrypt.hashSync(password);
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`insert into user_details (email, username, userpassword) values ('${email}', '${username}', '${hash}')`)
-			.then(result => {
-				sql.close();
-				return true;
-			})
-		)
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`select ${type} from user_details where ${type} = '${data}'`)
+		.then(result => {
+			if (result.rowsAffected[0] === 0) {
+				resolve(false);
+			}
+			resolve(true);
 		})
 		.catch(e => {
 			console.log(e);
-			console.log("Failed to create new user");
-			return false;
-		});
-	return result;
+			console.log("Failed to check");
+			resolve(false);
+		})
+	})
+
 }
 
-const ValidateUser = (sql, config, bcrypt, username, password) => {
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`select * from user_details where username = '${username}'`)
-			.then(result => {
-				sql.close();
-				if (result.rowsAffected[0] === 0) {
-					return -1;
+const InsertNewUser = (pool, config, req, bcrypt) => {
+	const { email, username, password } = req.body;
+	const hash = bcrypt.hashSync(password);
+
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`insert into user_details (email, username, userpassword) values ('${email}', '${username}', '${hash}')`)
+		.then(result => {
+			resolve(getUserDetails(pool, config, username));
+		})
+		.catch(e => {
+			console.log(e);
+			resolve(-1);
+		})
+	})
+		
+
+}
+
+const getUserDetails = (pool, config, username) => {
+
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`select * from user_details where username = '${username}'`)
+		.then(result => {
+			resolve(result.recordset);
+		})
+		.catch(e => {
+			resolve(-1);
+		})
+	})
+	
+}
+
+const ValidateUser = (pool, config, bcrypt, username, password) => {
+	
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`select * from user_details where username = '${username}'`)
+		.then(result => {
+			if (result.rowsAffected[0] === 0) {
+				resolve(-1);
+			} else {
+				const correctPassword = bcrypt.compareSync(password, result.recordset[0].userpassword, 
+					(err, res) => {
+						return res;
+				});
+				
+				if (correctPassword) {
+					resolve(result.recordset);
 				} else {
-					const correctPassword = bcrypt.compareSync(password, result.recordset[0].userpassword, 
-						(err, res) => {
-							return res;
-					});
-					
-					if (correctPassword) {
-						return result.recordset;
-					}
-					return -1;
-				}
-			})
-		)
-	});
-	return result;
+					resolve(-1);
+				}				
+			}
+		})
+	})
+
 }
 
-const CreateNewPost = (sql, config, bcrypt, userid, password, req) => {
+const CreateNewPost = (pool, config, bcrypt, userid, password, req) => {
 	const { title, content } = req.body;
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`insert into userblog (userid, content, title) values ('${userid}', '${content}', '${title}')`)
-			.then(result => {
-				sql.close();
-				return true;
-			})
-			.catch(e => {
-				console.log("failed to insert a new post");
-				return false;
-			})
-		)
-	});
-	return result;	
+
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`insert into userblog (userid, content, title) values ('${userid}', '${content}', '${title}')`)
+		.then(result => {
+			resolve(true);
+		})
+		.catch(e => {
+			console.log("failed to insert a new post");
+			resolve(false);
+		})
+	})
+
 }
 
-const getAllPosts = (sql, config, userid) => {
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`select * from user_blog where id = '${userid}'`)
-			.then(result => {
-				sql.close();
-				if (result.rowsAffected[0] === 0) {
-					console.log("NO user");
-					return false;
-				}
-				return result;
-			})
-			.catch(e => {
-				console.log("Error getting posts from user");
-			})
-		)
-	});
-	return result;
-}
+const getAllPosts = (pool, config, userid) => {
 
-const deletePost = (sql, config, userid, postid) => {
-	const result = sql.connect(config).then(pool => {
-		return (
-			pool.request()
-			.query(`delete from user_blog where id = '${postid}'`)
-			.then(result => {
-				if (result.rowsAffected[0] === 0) {
-					console.log("Post not found!");
-					return false;
-				}
-				return true;
-			})
-		)
-	});
-	return result;
+	return new Promise((resolve, reject) => {
+		pool.request()
+		.query(`select * from user_blog where id = '${userid}'`)
+		.then(result => {
+			if (result.rowsAffected[0] === 0) {
+				resolve(false);
+			}
+			resolve(result.recordset);
+		})
+		.catch(e => {
+			resolve(false);
+		})
+	})
+
 }
 
 module.exports = {

@@ -7,8 +7,7 @@ const dotenv = require('dotenv');
 
 const Register = require('./controllers/Register');
 const LogIn = require('./controllers/LogIn');
-//const NewPost = require('./controllers/NewPost');
-
+const Blog = require('./controllers/Blog');
 
 dotenv.config();
 
@@ -28,6 +27,15 @@ create table user_profile (
 	picture varchar(255),
 	intro varchar(255),
 );
+
+create table user_blog (
+	id int identity(1,1) primary key,
+	userid int,
+	content text,
+	title varchar(255),
+	dateCreated datetime default current_timestamp
+);
+
 */
 
 const config = {
@@ -42,14 +50,6 @@ const config = {
 }
 
 const sql = require('mssql');
-/*sql.connect(config).then(pool => {
-	return pool.request().query('select * from user_details')
-			.then(result => {
-				sql.close();
-			})
-
-});
-*/
 
 const app = express();
 app.use(cors());
@@ -66,7 +66,10 @@ app.post('/register', (req, res) => { Register.Register(req, res, sql, bcrypt, c
 app.post('/login', (req, res) => { LogIn.LogIn(req, res, sql, bcrypt, config) });
 
 /* Handle creations of new blog post */
-//app.post('./newPost', (req, res) => { newPost.NewPost(req, res, db) });
+app.post('./newPost', (req, res) => { Blog.NewPost(req, res, sql, bcrypt, config) });
+
+/* Return all posts from user */
+app.get('./getPosts', (req, res) => { Blog.getPosts(req, res, sql, bcrypt, config) });
 
 app.listen(process.env.PORT || 10000, () => {
 	console.log('Server is now listening');

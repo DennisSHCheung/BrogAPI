@@ -1,6 +1,6 @@
 const db = require('./DBHandler');
 
-/*	*/
+/*	Verify user's credentials */
 const LogIn = (req, res, sql, bcrypt, config) => {
 
 	const { username, password } = req.body;
@@ -8,19 +8,12 @@ const LogIn = (req, res, sql, bcrypt, config) => {
 		return res.status(400).json({ errorMessage: "Missing username or password" });
 	}
 
-	// const isInputCorrect = await db.ValidateUser(sql, config, bcrypt, username, password);
-	// if (isInputCorrect) {
-	// 	res.status(200).json({ errorMessage: "Welcome" });
-	// } else {
-	// 	res.status(400).json({ errorMessage: "WRONG!" });
-	// }
-
 	db.ValidateUser(sql, config, bcrypt, username, password)
-	.then(success => {
-		if (success) {
-			res.status(200).json({ errorMessage: "Welcome" });
+	.then(user => {
+		if (user != -1) {
+			res.status(200).json({ response: user });
 		} else {
-			res.status(400).json({ errorMessage: "WRONG!" });
+			res.status(400).json({ response: "Incorrect credentials" });
 		}
 	})
 

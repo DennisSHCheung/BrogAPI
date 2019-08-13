@@ -69,10 +69,10 @@ app.post('/register', (req, res) => { Register.Register(req, res, pool, bcrypt, 
 app.post('/login', (req, res) => { LogIn.LogIn(req, res, pool, bcrypt, config) });
 
 /* Handle creations of new blog post */
-app.post('./newPost', (req, res) => { Blog.NewPost(req, res, pool, bcrypt, config) });
+app.post('/newPost', (req, res) => { Blog.NewPost(req, res, pool, bcrypt, config) });
 
 /* Return all posts from user */
-app.get('./getPosts', (req, res) => { Blog.getPosts(req, res, pool, bcrypt, config) });
+app.get('/getPosts', (req, res) => { Blog.GetPosts(req, res, pool, bcrypt, config) });
 
 app.listen(process.env.PORT || 10000, () => {
 	console.log('Server is now listening');
